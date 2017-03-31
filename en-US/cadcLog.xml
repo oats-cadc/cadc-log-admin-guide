@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "AC_UsersGuide.ent">
+%BOOK_ENTITIES;
+]>
+<chapter id="chap-Documentation-AC_UsersGuide-cadcLog_Chapter">
+	<title>cadcLog Utility</title>
+
+<para>
+This chapter explains how to use cadcLog utility. 
+</para>
+<para>
+cadcLog in a utility to get control of the logging configuration. Specifically, it is a singe custom servlet to configure logging.
+</para>
+
+
+	<section id="sect-Documentation-AC_UsersGuide_Chapter-cadcLog_Section_1">
+		<title>cadcLog: web.xml for servlet deployment</title>
+<para>
+An example of  deployment descriptor file web.xml to deploy the logControl servlet is below:
+</para>
+<screen>
+  &lt;servlet&gt;
+    &lt;!--
+        To make sure the logging level gets set before any
+        logging gets done, set load-on-startup to a smaller
+        whole number than is used for any other servlet
+        in this webapp.  This assumes Tomcat 5.5 or later.
+    --&gt;
+    &lt;servlet-name&gt;logControl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;ca.nrc.cadc.log.LogControlServlet&lt;/servlet-class&gt;
+    &lt;init-param&gt;
+      &lt;param-name&gt;logLevel&lt;/param-name&gt;
+      &lt;param-value&gt;info&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+      &lt;param-name&gt;logLevelPackages&lt;/param-name&gt;
+      &lt;param-value&gt;
+        ca.nrc.cadc.auth
+        ca.nrc.cadc.ac
+        ca.nrc.cadc.vosi
+      &lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;logAccessGroup&lt;/param-name&gt;
+        &lt;param-value&gt;CADC&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;groupAuthorizer&lt;/param-name&gt;
+        &lt;param-value&gt;ca.nrc.cadc.auth.CADCGroupAuthorizer&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;load-on-startup&gt;1&lt;/load-on-startup&gt;
+  &lt;/servlet&gt;
+
+  &lt;!--
+           The Log service
+  --&gt;
+  &lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;logControl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/logControl&lt;/url-pattern&gt;
+  &lt;/servlet-mapping&gt;
+</screen>
+
+<para>
+A good security assesment is suggested:
+</para>
+<screen>
+  &lt;!-- Define the public security role --&gt;
+  &lt;security-role&gt;
+    &lt;description&gt;Public security role&lt;/description&gt;
+    &lt;role-name&gt;public&lt;/role-name&gt;
+  &lt;/security-role&gt;
+
+  &lt;!-- Define a security constraint for auth servlet --&gt;
+  &lt;security-constraint&gt;
+    &lt;web-resource-collection&gt;
+      &lt;web-resource-name&gt;auth&lt;/web-resource-name&gt;
+      &lt;description/&gt;
+      &lt;url-pattern&gt;/logControl/*&lt;/url-pattern&gt;
+      &lt;http-method&gt;GET&lt;/http-method&gt;
+      &lt;http-method&gt;POST&lt;/http-method&gt;
+      &lt;http-method&gt;HEAD&lt;/http-method&gt;
+      &lt;http-method&gt;PUT&lt;/http-method&gt;
+      &lt;http-method&gt;OPTIONS&lt;/http-method&gt;
+      &lt;http-method&gt;TRACE&lt;/http-method&gt;
+      &lt;http-method&gt;DELETE&lt;/http-method&gt;
+    &lt;/web-resource-collection&gt;
+    &lt;auth-constraint&gt;
+      &lt;description&gt;force authentication for all requests&lt;/description&gt;
+      &lt;role-name&gt;public&lt;/role-name&gt;
+    &lt;/auth-constraint&gt;
+  &lt;/security-constraint&gt;
+
+  &lt;!--
+           BASIC Http Authentication for logControl
+  --&gt;
+  &lt;login-config&gt;
+    &lt;auth-method&gt;BASIC&lt;/auth-method&gt;
+    &lt;realm-name&gt;Canadian Astronomy Data Centre&lt;/realm-name&gt;
+  &lt;/login-config&gt;
+</screen>
+
+<para>
+In production environment it is suggested to have some access control in place to prevent people from messing with the logging config.
+</para>
+<para>
+For debug purpose the access control can be disabled. For logging it is needed to modify the web.xml to remove auth restrictions so control logging levels could be changed without authentication. To achieve this result, first, to find the servlet with &lt;servlet-name>logControl&lt;/servlet-name&gt; and to remove (comment out) the following init-params:
+</para>
+<screen>
+     &lt;init-param&gt;
+         &lt;param-name&gt;logAccessGroup&lt;/param-name&gt;
+         &lt;param-value&gt;CADC&lt;/param-value&gt;
+     &lt;/init-param&gt;
+     &lt;init-param&gt;
+         &lt;param-name&gt;groupAuthorizer&lt;/param-name&gt;
+         &lt;param-value&gt;ca.nrc.cadc.auth.CADCGroupAuthorizer&lt;/param-value&gt;
+     &lt;/init-param&gt;
+</screen>
+<para>
+Also to find the &lt;security-constraint&gt; section at the bottom of the web.xml. Inside there is a pattern: &lt;url-pattern&gt;/logControl/*&lt;/url-pattern&gt;
+</para>
+<para>
+To comment that line out so it will be possible to access the LogControlServlet without authenticating.
+</para>
+<para>
+To restart tomcat after changing  the web.xml file and to check the logs for the startup messages from the LogControlServlet. 
+</para>
+<para>
+The initial logging level configuration is usually at INFO level for operational use and the web.xml set can be leaved to this good operational level. For debugging, it is easier to change the logging dynamically in the running service (see below).
+</para>
+
+	</section>
+
+       <section id="sect-Documentation-AC_UsersGuide_Chapter-cadcLog_Section_2">
+                <title>Dynamically control logging config in a running service</title>
+
+<para>The cadcLog module in core module of opencadc github repository contains a script for changing the log levels in a running service. This is a simple bash script that uses curl to interact with the LogControlServlet.</para>
+
+<para>To see the current config:</para>
+<screen>
+${CADC_PREFIX}/cadcLog/scripts/cadcLogSet --get http://localhost:8080/ac/logControl
+</screen>
+
+<para>To increase logging to DEBUG:</para>
+<screen>
+${CADC_PREFIX}/cadcLog/scripts/cadcLogSet --set http://localhost:8080/ac/logControl DEBUG
+</screen>
+
+<para>Note that the packages that are affected are only the ones listed in the LogControlServlet, by default:</para>
+<screen>
+&lt;init-param&gt;
+&lt;param-name&gt;logLevelPackages&lt;/param-name&gt;
+&lt;param-value&gt;
+ ca.nrc.cadc.auth
+ ca.nrc.cadc.ac
+ ca.nrc.cadc.vosi
+&lt;/param-value&gt;
+&lt;/init-param&gt;
+</screen>
+
+<para>To add a new package so you can see log messages from it too:</para>
+<screen>
+core/cadc-log/scripts/cadcLogSet --set http://localhost:8080/ac/logControl DEBUG ca.nrc.cadc.util
+</screen>
+
+<para>Check the current logging config:</para>
+<screen>
+core/cadc-log/scripts/cadcLogSet --get http://localhost:8080/ac/logControl
+</screen>
+
+<para>After some debugging, it is kindly suggested to change the level pack to INFO:</para>
+<screen>
+core/cadc-log/scripts/cadcLogSet --set http://localhost:8080/ac/logControl INFO
+</screen>
+
+       </section>
+	
+</chapter>
+

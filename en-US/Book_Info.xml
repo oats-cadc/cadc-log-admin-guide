@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE bookinfo PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "cadc-log-admin-guide.ent">
+%BOOK_ENTITIES;
+]>
+<bookinfo id="book-Documentation-cadc-log-admin-guide-cadc_log_admin_guide">
+	<title>CADC logging utility administration guide</title>
+	<subtitle>Enter a short description here.</subtitle>
+	<productname>Documentation</productname>
+	<productnumber>0.1</productnumber>
+	<edition>0</edition>
+	<pubsnumber>0</pubsnumber>
+	<abstract>
+		<para>
+			The core module of the opencadc software contains a i
+logging management utility called cadc-log. This utility allow to manage logging level
+and logging administration tasks access.
+		</para>
+	</abstract>
+	<corpauthor>
+		<inlinemediaobject>
+			<imageobject>
+				<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
+			</imageobject>
+		</inlinemediaobject>
+	</corpauthor>
+	<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+</bookinfo>
+
